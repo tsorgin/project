@@ -2,7 +2,7 @@
 #define vec3_h
 
 #include <cmath>
-
+#include <stdio.h>
 class vec3
 {
 public:
@@ -20,12 +20,12 @@ public:
 		}
 
 	// Operator Overloads
-	inline bool operator== (const vec3& V2) const 
+	inline bool operator== (const vec3& V2) const
 		{
 		return (x == V2.x && y == V2.y && z == V2.z);
 		}
 
-	inline vec3 operator+ (const vec3& V2) const 
+	inline vec3 operator+ (const vec3& V2) const
 		{
 		return vec3( x + V2.x,  y + V2.y,  z + V2.z);
 		}
@@ -94,7 +94,20 @@ public:
 		{
 		return V1.x*x + V1.y*y + V1.z*z;
 		}
+	inline void Cross( vec3 &V1)
+	/*
+	THis function may give the incorrect result. Needs testing
+	 */
+	{
+		double xx, yy, zz;
+		xx = V1.y*z - V1.z*y;
+		yy = V1.z*x - V1.x*z;
+		zz = V1.x*y - V1.y*x;
 
+		x = xx;
+		y= yy;
+		z= zz;
+	}
 	// These require math.h for the sqrt function
 	double Magnitude( ) const
 		{
@@ -106,7 +119,7 @@ public:
 		double fMag = ( x*x + y*y + z*z );
 		if (fMag == 0) {return;}
 
-		double fMult = 1.0/sqrt(fMag);            
+		double fMult = 1.0/sqrt(fMag);
 		x *= fMult;
 		y *= fMult;
 		z *= fMult;
@@ -128,7 +141,7 @@ inline double clamp(double d, double min, double max)
   return d;
 }
 
-inline void clamp(vec3 &v, double min, double max) 
+inline void clamp(vec3 &v, double min, double max)
 {
   v.x = clamp(v.x,min,max);
   v.y = clamp(v.y,min,max);
