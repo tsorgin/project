@@ -27,12 +27,14 @@
 using namespace std;
 
 //---lightning and colouring---------
-static vec3 CamLight(1.0,1.0,1.0);
+static vec3 CamLight(0,.20,1.0);
 static double CamLightW = 1.8;// 1.27536;
 static double CamLightMin = 0.3;// 0.48193;
 //-----------------------------------
-static const vec3 baseColor(1.0, 1.0, 1.0);
-static const vec3 backColor(0.4,0.4,0.4);
+static const vec3 Shade_origin(0.0, 0.0, 0.0);
+
+static const vec3 baseColor(0, .1, 1.0);
+static const vec3 backColor(.8,.3,.20);
 //-----------------------------------
 
 void lighting(const vec3 &n, const vec3 &color, const vec3 &pos, const vec3 &direction,  vec3 &outV)
@@ -47,19 +49,19 @@ vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
 {
   //colouring and lightning
   vec3 hitColor = baseColor;
-  
-  if (pixData.escaped == false) 
+
+  if (pixData.escaped == false)
     {
       //apply lighting
       lighting(pixData.normal, hitColor, pixData.hit, direction, hitColor);
-      
+
       //add normal based colouring
       if(render_params.colourType == 0 || render_params.colourType == 1)
 	{
 	  hitColor = hitColor * pixData.normal;
 	  hitColor = (hitColor + 1.0)/2.0;
 	  hitColor = hitColor*render_params.brightness;
-	  
+
 	  //gamma correction
 	  clamp(hitColor, 0.0, 1.0);
 	  hitColor = hitColor*hitColor;
@@ -72,9 +74,23 @@ vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
 	  hitColor.z = t;
 	}
     }
-  else 
-    //we have the background colour
-    hitColor = backColor;
-  
+  else{
+      //Draw a circular shadow in the background.
+      vec3 temp, temp2, bottom;
+      temp = Shade_origin - direction;
+      temp2 = Shade_origin - from;
+
+      temp.Cross(temp2);
+      double top = temp.Magnitude();
+      bottom = from-direction;
+      double party = bottom.Magnitude();
+      double answer = top/party;
+      answer = answer;
+
+      hitColor = backColor;
+      hitColor.z = hitColor.z*answer;
+      hitColor.x = hitColor.x*answer;
+      hitColor.y = hitColor.y*answer;
+    }
   return hitColor;
 }
