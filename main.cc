@@ -96,17 +96,17 @@ int main(int argc, char** argv)
 
     axis.x = 1;
 
-    camera_params.camPos[0] = camera_params.camPos[0] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+    camera_params.camPos[0] = camera_params.camPos[0] + (target.Dot(axis)*max_axis_step );
 
     axis.x = 0;
     axis.y = 1;
 
-    camera_params.camPos[1] = camera_params.camPos[1] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+    camera_params.camPos[1] = camera_params.camPos[1] + (target.Dot(axis)*max_axis_step );
 
     axis.y = 0;
     axis.z = 1;
 
-    camera_params.camPos[2] = camera_params.camPos[2] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+    camera_params.camPos[2] = camera_params.camPos[2] + (target.Dot(axis)*max_axis_step );
 
     printf("%f %f %f \n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2] );
     // camera_params.camPos[0] = camera_params.camPos[0] - .025;
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
     // }
     double dist = 0;
 
-    if (i % 5 ==  0)
+    if (i ==  0)
     {
       camera_params.camTarget[0] = New_dir.x;
       camera_params.camTarget[1] = New_dir.y;
