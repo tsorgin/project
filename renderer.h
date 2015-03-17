@@ -50,6 +50,12 @@ typedef struct
   int boundBoxx; //Bounding box x size
   int boundBoxy; //Bounding box y size
   int camTestPoints; //Should we show were the camera is testing for max depth (circles)
+
+
+  /*
+  Params for custom shadding
+   */
+  double old_max_distance;
 } RenderParams;
 
 #endif

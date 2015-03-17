@@ -1,15 +1,15 @@
 # CAMERA
 # location  x,y,z   (7,7,7)
-0.0 0.0 6.05
+5.5 5.5 6.5
 # look_at (target)  x,y,z
-0 0 0
+5 5 5
 # up vector x,y,z;  (0, 1, 0)
 0 1 0
 # field of view     (1)
 1
 # IMAGE
 # width height
-360 300
+325 325
 # detail level, the smaller the more detailed (-3)
 -3
 # MANDELBOX
@@ -19,7 +19,7 @@
 18 100
 # COLORING
 # type 0 or 1. If it is 2 converts output to distance map
-2
+1
 # brightness
 1.2
 # super sampling anti aliasing 0 = off, 1 = on
@@ -31,7 +31,7 @@ image.bmp
 #enable (1yes)
 1
 # Camera Testing window (1 on) camBoundBox xsize ysize
-0 200 200
+0 150 150
 # Camera depth tracker (1 on) distShower
 1
 # Camera Testing circle (1 on) camTestPoints

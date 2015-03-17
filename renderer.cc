@@ -33,9 +33,9 @@ void convert_to_distancemap (unsigned char *image, double * x, int width, int he
 void colour_focus_dir (unsigned char *image, int i, int j, int width, int height,int radius);
 extern void rayMarch (const RenderParams &render_params, const vec3 &from, const vec3  &to, pixelData &pix_data);
 extern vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
-		      const vec3 &from, const vec3  &direction);
+		      const vec3 &from, const vec3  &direction, double max_distance);
 
-void renderFractal(const CameraParams &camera_params, const RenderParams &renderer_params,
+void renderFractal(const CameraParams &camera_params,  RenderParams &renderer_params,
 		   unsigned char* image, vec3 &max_dist)
 {
   double farPoint[3];
@@ -46,8 +46,11 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 
   int height = renderer_params.height;
   int width  = renderer_params.width;
-
-
+/*
+We will estimate the max distance in this frame with max distance from the previous frame.
+This is used for fogging.
+ */
+double prev_max_distance = renderer_params.old_max_distance; //Currently just manually put in
 
   pixelData pix_data;
 	double * x = new double [height*width];
@@ -84,7 +87,7 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 
 
 			  //get the colour at this pixel
-			  samples[idx] = getColour(pix_data, renderer_params, from, to);
+			  samples[idx] = getColour(pix_data, renderer_params, from, to,prev_max_distance);
 			  //printf(" Sample colour: %f %f %f\n",samples[idx].x,samples[idx].y,samples[idx].z );
 			  idx++;
 			}
@@ -109,7 +112,7 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	      rayMarch(renderer_params, from, to, pix_data);
 
 	      //get the colour at this pixel
-	      color = getColour(pix_data, renderer_params, from, to);
+	      color = getColour(pix_data, renderer_params, from, to,prev_max_distance);
 	    }
 
 
@@ -132,7 +135,9 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	}
       printProgress((j+1)/(double)height,getTime()-time);
     }
+    renderer_params.old_max_distance = scalefactor; //We use this inthe next frame as a guess when we do colouring
 
+    printf("Max camera distance %f\n", scalefactor);
     if (renderer_params.enable == 1)
     {
     	/*Does camera path planning*/
@@ -146,7 +151,9 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	    //the centre of the view window. this prevents out of array checking as well as rapid movement
 
 
-
+	    if (renderer_params.colourType == 2){ //Make picture a distance map
+	    	convert_to_distancemap (image,  x,  width,  height, max_distance,scalefactor);
+		}
 
 	    for (int i = bounding_box_y; i < height-bounding_box_y; i++)
 	    {
@@ -171,10 +178,12 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	    		}
 	    	}
 	    }
+	    /*
+	    Need the max distance on each frame. REALLY BADLY
+	    We want to take this on the view window. This will keep it more consistent
+	     */
 
-	    if (renderer_params.colourType == 2){ //Make picture a distance map
-	    	convert_to_distancemap (image,  x,  width,  height, max_distance,max_distance);
-		}
+
 
 
 		if (renderer_params.camBoundBox == 1)
@@ -230,9 +239,12 @@ int holesize (unsigned char * image, double * x,  int ii, int jj, double scalefa
 	 */
 
 
-	double sum = 0.0; //Temp varaible to calculate the average of distance in points.
+	double mean = 0.0; //Temp varaible to calculate the average of distance in points.
 	int counter = 0;
 	// printf("Checking hole size at: %d, %d\n", ii, jj);
+
+
+	// Calculate the mean of our values (inside the circle)
 	for (int i = ii-radius-1; i < ii+radius+1; i++)
 	{
 		for (int j = jj-radius-1; j < jj+radius+1; j++)
@@ -243,13 +255,33 @@ int holesize (unsigned char * image, double * x,  int ii, int jj, double scalefa
 			// printf("i %d, j%d\n", i,j);
 			if (sqrdist <= radius*radius){
 				int k = (i*width + j); //Had this as (j*width +i) which Ithink was backwards.
-				sum = sum + x[k];
+				mean = mean + x[k];
 				counter ++;
 
 			}
 		}
 	}
+	mean = mean/counter;
+	double sum =0.0;
+	//Clauclate the standard deviation
+	for (int i = ii-radius-1; i < ii+radius+1; i++)
+	{
+		for (int j = jj-radius-1; j < jj+radius+1; j++)
+		{
+			double dx = i - ii;
+			double dy = j - jj;
+			double sqrdist = dx*dx + dy*dy;
+			// printf("i %d, j%d\n", i,j);
+			if (sqrdist <= radius*radius){
+				int k = (i*width + j); //Had this as (j*width +i) which Ithink was backwards.
+				sum = sum + (x[k]-mean)*(x[k]-mean);
+			}
+		}
+	}
 	sum = sum/counter;
+	double standard_dev = sqrt(sum); //The standard deviation of distance values in our circle
+
+	// printf("Deviation is: %f\n",standard_dev );
 	int active_pix = (ii*width+ jj);
 	for (int i = ii-radius-1; i < ii+radius+1; i++)
 	{
@@ -262,10 +294,11 @@ int holesize (unsigned char * image, double * x,  int ii, int jj, double scalefa
 			if (sqrdist <= radius*radius){
 				int k = (i*width+j);
 
-				if (x[k] <x[active_pix] -1.5*sum ||  x[k] >x[active_pix] +1.5*sum)
+				if (x[k] <x[active_pix] -standard_dev*1.5 ||  x[k] >x[active_pix] +standard_dev*1.5)
 				{
 					return 0;
 				}
+				// printf("Distance: %f \n", x[k]);
 				if (camTestPoints==1)
 				{
 					//Shading to see where it is testing max distance
@@ -317,6 +350,7 @@ void colour_focus_dir (unsigned char *image, int ii, int jj, int width, int heig
 			double dy = j - jj;
 			double sqrdist = dx*dx + dy*dy;
 			if (sqrdist <= radius*radius){
+
 				int k = (i*width + j);
 				image[k*3+2] = 0;
 				image[k*3+1] = 0;

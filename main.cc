@@ -37,7 +37,7 @@ using namespace std;
 void getParameters(char *filename, CameraParams *camera_params, RenderParams *renderer_params,
        MandelBoxParams *mandelBox_paramsP);
 void init3D       (CameraParams *camera_params, const RenderParams *renderer_params);
-void renderFractal(const CameraParams &camera_params, const RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
+void renderFractal(const CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
 void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
 
 MandelBoxParams mandelBox_params;
@@ -60,12 +60,15 @@ int main(int argc, char** argv)
 
   getParameters(argv[1], &camera_params, &renderer_params, &mandelBox_params);
 
+
+  renderer_params.old_max_distance = 0.017113; //Take this out eventually
+
   int image_size = renderer_params.width * renderer_params.height;
   unsigned char *image = (unsigned char*)malloc(3*image_size*sizeof(unsigned char));
   logfile << "Resolution: " << renderer_params.width << "x" << renderer_params.height << "\n";
 
   init3D(&camera_params, &renderer_params);
-  for (int i = 0; i < 20; i++)
+  for (int i = 0; i < 150; i++)
   {
 
     printf("Frame %d\n", i);
@@ -79,46 +82,88 @@ int main(int argc, char** argv)
     // TARGET FRAME X Y Z
     logfile << "T" << " " << i << " " << camera_params.camTarget[0] << " " << camera_params.camTarget[1] << " " << camera_params.camTarget[2] << "\n";
 
+    //////////////////////////////////////////////////////////////////////////////////////
+    ///Taylor working here
+    //fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) is the right idea. BUt if one fails,
+    //you must scale all of them by the same amount.... also have to make sure to keep sign.
+
+    double max_axis_step = .005;
+    vec3 axis, target;
+    target.x = camera_params.camTarget[0];
+    target.y = camera_params.camTarget[1];
+    target.z = camera_params.camTarget[2];
+    target.Normalize();
+
+    axis.x = 1;
+
+    camera_params.camPos[0] = camera_params.camPos[0] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+
+    axis.x = 0;
+    axis.y = 1;
+
+    camera_params.camPos[1] = camera_params.camPos[1] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+
+    axis.y = 0;
+    axis.z = 1;
+
+    camera_params.camPos[2] = camera_params.camPos[2] + (fabs(target.Dot(axis))> max_axis_step ? max_axis_step:target.Dot(axis) );
+
+    printf("%f %f %f \n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2] );
+    // camera_params.camPos[0] = camera_params.camPos[0] - .025;
+    // camera_params.camPos[1] = camera_params.camPos[1] - .025;
+    // camera_params.camPos[2] = camera_params.camPos[2] - .025;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     renderFractal(camera_params, renderer_params, image, New_dir);
 
     // printf("NEW CAMERA DIRECTION: %f, %f, %f\n", New_dir.x,New_dir.y,New_dir.z);
-      if (1){
-          // CALCULATE THE NEW CAMERA TARGET
-        if(fabs((New_dir.x*newPos_resolution)) < max_TargetChange){
-          camera_params.camTarget[0] = camera_params.camTarget[0] + New_dir.x*newPos_resolution;
-          printf("Adding %lf to x\n", New_dir.x*newPos_resolution);
-        }
+    //   if (1){
+    //       // CALCULATE THE NEW CAMERA TARGET
+    //     if(fabs((New_dir.x*newPos_resolution)) < max_TargetChange){
+    //       camera_params.camTarget[0] = camera_params.camTarget[0] + New_dir.x*newPos_resolution;
+    //       printf("Adding %lf to x\n", New_dir.x*newPos_resolution);
+    //     }
 
-        // else
-        //   camera_params.camTarget[0] = camera_params.camTarget[0] + (New_dir.x < 0) ? -1 : (New_dir.x > 0)*max_TargetChange;
+    //     // else
+    //     //   camera_params.camTarget[0] = camera_params.camTarget[0] + (New_dir.x < 0) ? -1 : (New_dir.x > 0)*max_TargetChange;
 
-        if(fabs((New_dir.y*newPos_resolution)) < max_TargetChange){
-          camera_params.camTarget[1] = camera_params.camTarget[1] + New_dir.y*newPos_resolution;
-          printf("Adding %lf to y\n", New_dir.y*newPos_resolution);
-        }
-        // else
-        //   camera_params.camTarget[1] = camera_params.camTarget[1] + (New_dir.y < 0) ? -1 : (New_dir.y > 0)*max_TargetChange;
+    //     if(fabs((New_dir.y*newPos_resolution)) < max_TargetChange){
+    //       camera_params.camTarget[1] = camera_params.camTarget[1] + New_dir.y*newPos_resolution;
+    //       printf("Adding %lf to y\n", New_dir.y*newPos_resolution);
+    //     }
+    //     // else
+    //     //   camera_params.camTarget[1] = camera_params.camTarget[1] + (New_dir.y < 0) ? -1 : (New_dir.y > 0)*max_TargetChange;
 
-        if(fabs((New_dir.z*newPos_resolution)) < max_TargetChange){
-          camera_params.camTarget[2] = camera_params.camTarget[2] + New_dir.z*newPos_resolution;
-          printf("Adding %lf to z\n", New_dir.z*newPos_resolution);
-        }
-        // else
-        //   camera_params.camTarget[2] = camera_params.camTarget[2] + (New_dir.z < 0) ? -1 : (New_dir.z > 0)*max_TargetChange;
+    //     if(fabs((New_dir.z*newPos_resolution)) < max_TargetChange){
+    //       camera_params.camTarget[2] = camera_params.camTarget[2] + New_dir.z*newPos_resolution;
+    //       printf("Adding %lf to z\n", New_dir.z*newPos_resolution);
+    //     }
+    //     // else
+    //     //   camera_params.camTarget[2] = camera_params.camTarget[2] + (New_dir.z < 0) ? -1 : (New_dir.z > 0)*max_TargetChange;
 
-    }
+    // }
     double dist = 0;
 
+    if (i % 5 ==  0)
+    {
+      camera_params.camTarget[0] = New_dir.x;
+      camera_params.camTarget[1] = New_dir.y;
+      camera_params.camTarget[2] = New_dir.z;
+    }
+
+
+
+
     // CALCULATE THE PATH ALONG WHICH THE CAMERA MOVES
-    dist = camera_params.camTarget[0] - camera_params.camPos[0];
-    camera_params.camPos[0] = dist*max_FrameStep+  camera_params.camPos[0];
+    // dist = camera_params.camTarget[0] - camera_params.camPos[0];
+    // camera_params.camPos[0] = dist*max_FrameStep+  camera_params.camPos[0];
 
-    dist = camera_params.camTarget[1] - camera_params.camPos[1];
-    camera_params.camPos[1] = dist*max_FrameStep +  camera_params.camPos[1];
+    // dist = camera_params.camTarget[1] - camera_params.camPos[1];
+    // camera_params.camPos[1] = dist*max_FrameStep +  camera_params.camPos[1];
 
-    dist = camera_params.camTarget[2] - camera_params.camPos[2];
-    camera_params.camPos[2] = dist*max_FrameStep +  camera_params.camPos[2];
+    // dist = camera_params.camTarget[2] - camera_params.camPos[2];
+    // camera_params.camPos[2] = dist*max_FrameStep +  camera_params.camPos[2];
 
 
     // MAP TO 3D AND FIND NEW CAMERA TARGET

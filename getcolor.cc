@@ -45,7 +45,7 @@ void lighting(const vec3 &n, const vec3 &color, const vec3 &pos, const vec3 &dir
 }
 
 vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
-	       const vec3 &from, const vec3  &direction)
+	       const vec3 &from, const vec3  &direction, double max_distance)
 {
   //colouring and lightning
   vec3 hitColor = baseColor;
@@ -81,35 +81,37 @@ vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
 	}
 
   //Fogging
-  double total = hitColor.x - backColor.x + hitColor.y - backColor.y +hitColor.z- backColor.z;
-  double xscale = (hitColor.x - backColor.x)/total;
-  double yscale = (hitColor.y - backColor.y)/total;
-  double zscale = (hitColor.z - backColor.z)/total;
 
-
+  hitColor.x = hitColor.x +(backColor.x - hitColor.x)*pixData.distance/max_distance;
+  hitColor.y = hitColor.y +(backColor.y - hitColor.y)*pixData.distance/max_distance;
+  hitColor.z = hitColor.z +(backColor.z - hitColor.z)*pixData.distance/max_distance;
   // hitColor.x = hitColor.x/1.1 - (backColor.x*pixData.distance*4000*xscale)/3.9 ;
   // hitColor.y = hitColor.y/1.1 - (backColor.y*pixData.distance*4000*yscale)/3.9 ;
   // hitColor.z = hitColor.z/1.1 - (backColor.z*pixData.distance*4000*zscale)/3.9;
-  // clamp(hitColor, 0.0,1.0); //Not what I want to clamp. Should clamp each component
+  if (hitColor.x < backColor.x || hitColor.y < backColor.y || hitColor.z < backColor.z){ //Not what I want to clamp. Should clamp each component
+    hitColor.x = backColor.x;
+    hitColor.y = backColor.y;
+    hitColor.z = backColor.z;
+  }
 
     }
   else{
       //Draw a circular shadow in the background.
-      vec3 temp, temp2, bottom;
-      temp = Shade_origin - direction;
-      temp2 = Shade_origin - from;
+      // vec3 temp, temp2, bottom;
+      // temp = Shade_origin - direction;
+      // temp2 = Shade_origin - from;
 
-      temp.Cross(temp2);
-      double top = temp.Magnitude();
-      bottom = from-direction;
-      double party = bottom.Magnitude();
-      double answer = top/party;
-      answer = answer;
+      // temp.Cross(temp2);
+      // double top = temp.Magnitude();
+      // bottom = from-direction;
+      // double party = bottom.Magnitude();
+      // double answer = top/party;
+      // answer = answer;
 
       hitColor = backColor;
-      hitColor.z = hitColor.z*answer;
-      hitColor.x = hitColor.x*answer;
-      hitColor.y = hitColor.y*answer;
+      // hitColor.z = hitColor.z*answer;
+      // hitColor.x = hitColor.x*answer;
+      // hitColor.y = hitColor.y*answer;
     }
   return hitColor;
 }
