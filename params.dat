@@ -1,24 +1,24 @@
 # CAMERA
 # location  x,y,z   (7,7,7)
-14.0 8.0 10.0
+0.0 0.0 6.05
 # look_at (target)  x,y,z
-0 0 0 
+0 0 0
 # up vector x,y,z;  (0, 1, 0)
 0 1 0
 # field of view     (1)
-1.1  
+1
 # IMAGE
 # width height
-3840 2160
+360 300
 # detail level, the smaller the more detailed (-3)
--3.5
+-2.8
 # MANDELBOX
 # scale, rMin, rFixed  (2 0.5 1)
-2.0 0.5 1
+2 1 2
 # max number of iterations, escape time
 18 100
 # COLORING
-# type 0 or 1
+# type 0 or 1. If it is 2 converts output to distance map
 1
 # brightness
 1.2
@@ -26,3 +26,15 @@
 0
 # IMAGE FILE NAME
 image.bmp
+#
+#CAMERPATH PLANNING
+#enable (1yes)
+1
+# Camera Testing window (1 on) camBoundBox xsize ysize
+0 200 200
+# Camera depth tracker (1 on) distShower
+1
+# Camera Testing circle (1 on) camTestPoints
+0
+# Hole size (radius in pixels) holeSize
+3
