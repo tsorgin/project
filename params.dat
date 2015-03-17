@@ -11,7 +11,7 @@
 # width height
 360 300
 # detail level, the smaller the more detailed (-3)
--2.2
+-3
 # MANDELBOX
 # scale, rMin, rFixed  (2 0.5 1)
 2 1 2
@@ -37,4 +37,4 @@ image.bmp
 # Camera Testing circle (1 on) camTestPoints
 0
 # Hole size (radius in pixels) holeSize
-3
+5

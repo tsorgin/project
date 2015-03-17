@@ -133,7 +133,6 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
       printProgress((j+1)/(double)height,getTime()-time);
     }
 
-    printf("Scale factor %f\n", scalefactor);
     if (renderer_params.enable == 1)
     {
     	/*Does camera path planning*/
@@ -146,9 +145,7 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	    //This section checks to see which points are good to zoom the camera into. COntained to
 	    //the centre of the view window. this prevents out of array checking as well as rapid movement
 
-	    if (renderer_params.colourType == 2){ //Make picture a distance map
-	    	convert_to_distancemap (image,  x,  width,  height, max_distance,scalefactor);
-		}
+
 
 
 	    for (int i = bounding_box_y; i < height-bounding_box_y; i++)
@@ -175,7 +172,31 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	    	}
 	    }
 
+	    if (renderer_params.colourType == 2){ //Make picture a distance map
+	    	convert_to_distancemap (image,  x,  width,  height, max_distance,max_distance);
+		}
 
+
+		if (renderer_params.camBoundBox == 1)
+			/*
+			Only shows the camera view box if the params file wants to see it
+			 */
+		{
+			for (int i = bounding_box_y; i < height-bounding_box_y; i++)
+			{
+				for (int j = bounding_box_x; j < width-bounding_box_x; j++)
+				{
+					int k = (i *width+ j);
+					if (renderer_params.camBoundBox == 1)
+					{
+						// Shadding to see the bounding box (where we search for max distance)
+						image[k*3+2] = 255;
+						image[k*3+1] = 0;
+						image[k*3]   = 0;
+					}
+				}
+			}
+		}
 
     	if ((ii+jj) == 0) {
     		/*
@@ -271,7 +292,7 @@ void convert_to_distancemap (unsigned char *image, double *x, int width, int hei
 	    		int k = (i * width + j)*3;
 	    		 // printf("Point depth: %f Scale: %f\n", x[i * width + j],max_distance);
 	    		// printf("%f  MAX %f\n", x[i * width + j], max_distance);
-    			image[k+2] = (unsigned char)(x[i * width + j]/scalefactor * 255);
+    			image[k+2] = (unsigned char)(x[i * width + j]/scalefactor * 255 );
 	  			image[k+1] = (unsigned char)(x[i * width + j]/scalefactor  * 255);
 	  			image[k]   = (unsigned char)(x[i * width + j]/scalefactor  * 255);
 
