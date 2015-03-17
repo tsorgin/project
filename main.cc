@@ -65,7 +65,7 @@ int main(int argc, char** argv)
   logfile << "Resolution: " << renderer_params.width << "x" << renderer_params.height << "\n";
 
   init3D(&camera_params, &renderer_params);
-  for (int i = 0; i < 300; i++)
+  for (int i = 0; i < 20; i++)
   {
 
     printf("Frame %d\n", i);

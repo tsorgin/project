@@ -52,6 +52,11 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
   pixelData pix_data;
 	double * x = new double [height*width];
   double time = getTime();
+ 	 int bounding_box_x = (width - renderer_params.boundBoxx)/2 ;
+	int bounding_box_y = (height - renderer_params.boundBoxy)/2;
+
+
+
   for(int j = 0; j < height; j++)
     {
       //for each column pixel in the row
@@ -114,7 +119,7 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 			  {
 			  	x[j * width + i] = 100;
 			  }
-			  if (pix_data.distance > scalefactor and pix_data.escaped == false)
+			  if (pix_data.distance > scalefactor && pix_data.escaped == false )
 			  {
 			  	scalefactor = pix_data.distance;
 			  }
@@ -128,12 +133,14 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
       printProgress((j+1)/(double)height,getTime()-time);
     }
 
+    printf("Scale factor %f\n", scalefactor);
     if (renderer_params.enable == 1)
     {
     	/*Does camera path planning*/
 
 	    int ii=0, jj=0;
 	    double max_distance = 0.0;
+
 
 
 	    //This section checks to see which points are good to zoom the camera into. COntained to
@@ -143,8 +150,7 @@ void renderFractal(const CameraParams &camera_params, const RenderParams &render
 	    	convert_to_distancemap (image,  x,  width,  height, max_distance,scalefactor);
 		}
 
-		int bounding_box_x = (width - renderer_params.boundBoxx)/2 ;
-		int bounding_box_y = (height - renderer_params.boundBoxy)/2;
+
 	    for (int i = bounding_box_y; i < height-bounding_box_y; i++)
 	    {
 	    	for (int j = bounding_box_x; j < width-bounding_box_x; j++)
@@ -251,38 +257,7 @@ int holesize (unsigned char * image, double * x,  int ii, int jj, double scalefa
 		}
 	}
  //////////////////////////////////////////////////////////////////////////
-	// int real_index = ii * width + jj;
-	// /*
-	// First we sum up all the values. This will allow us to find edges in our data
-	//  */
-	// double sum = 0.0;
-	// 	for (int i = -6; i < 6; i++)
-	// 	{
-	// 		sum = sum + x[real_index+i];
-	// 	}
-	// 	sum = sum /12; // the average value. Edges should be much larger than this!
-	// 	for (int i = -6; i < 6; i++)
-	// 	{
-	// 		/*
-	// 		If uncommented lets us see where it is testing to put the camera.*/
-	// 		int k = (ii * width + jj+i)*3;
-	// 		image[k+2] = 255;
-	// 		image[k+1] = 0;
-	// 		image[k]   = 0;
-	// 		k = (ii * width + jj+i*width)*3;
-	// 		image[k+2] = 0;
-	// 		image[k+1] = 255;
-	// 		image[k]   = 0;
 
-
-
-	//   		//printf("Curr Pixel depth: %f compared to %f\n",x[real_index] ,x[real_index+i]);
-	// 		if (x[real_index+i] < x[real_index] - sum || x[real_index+i] > x[real_index] + sum )
-	// 		{
-	// 			return 0; //A potential edge was found
-	// 		}
-
-	// 	}
 
 	return 1;
 }
@@ -294,12 +269,12 @@ void convert_to_distancemap (unsigned char *image, double *x, int width, int hei
 	    	for (int j = 0; j < width; j++)
 	    	{
 	    		int k = (i * width + j)*3;
-	    		// printf("Point depth: %f Scale: %f\n", x[i * width + j],scalefactor);
+	    		 // printf("Point depth: %f Scale: %f\n", x[i * width + j],max_distance);
 	    		// printf("%f  MAX %f\n", x[i * width + j], max_distance);
     			image[k+2] = (unsigned char)(x[i * width + j]/scalefactor * 255);
-
 	  			image[k+1] = (unsigned char)(x[i * width + j]/scalefactor  * 255);
 	  			image[k]   = (unsigned char)(x[i * width + j]/scalefactor  * 255);
+
 
 
 	    	}
