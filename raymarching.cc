@@ -33,38 +33,38 @@ void rayMarch(const RenderParams &render_params, const vec3 &from, const vec3  &
 {
   double dist = 0.0;
   double totalDist = 0.0;
-  
+
   // We will adjust the minimum distance based on the current zoom
-  double eps = pow(10.0, render_params.detail); 
+  double eps = pow(10.0, render_params.detail);
   double epsModified = 0.0;
-  
+
   int steps;
   vec3 p;
-  for ( steps = 0; steps < render_params.maxRaySteps; steps++) 
-    {      
+  for ( steps = 0; steps < render_params.maxRaySteps; steps++)
+    {
       p = from + direction * totalDist;
       dist = DE(p);
       totalDist += 0.9*dist;
-      
+
       epsModified = totalDist*eps;
-      if (dist < epsModified || totalDist > render_params.maxDistance) 
+      if (dist < epsModified || totalDist > render_params.maxDistance)
 	break;
     }
-  
+
   vec3 hitNormal;
-  if (dist < epsModified) 
+  if (dist < epsModified)
     {
       //we didnt escape
       pix_data.escaped = false;
-      
+
       // We hit something, or reached MaxRaySteps
       pix_data.hit = p;
-      
+      pix_data.distance = epsModified;
       //figure out the normal of the surface at this point
       vec3 normPos = p - direction * epsModified;
       normal(normPos, pix_data.normal);
     }
-  else 
+  else
     //we have the background colour
     pix_data.escaped = true;
 }
@@ -80,8 +80,8 @@ void normal(const vec3 & p, vec3 & normal)
   vec3 e1(eps, 0,   0);
   vec3 e2(0  , eps, 0);
   vec3 e3(0  , 0, eps);
-  
+
   normal = vec3(DE(p+e1)-DE(p-e1), DE(p+e2)-DE(p-e2), DE(p+e3)-DE(p-e3));
-  
+
   normal.Normalize();
 }

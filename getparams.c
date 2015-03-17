@@ -35,31 +35,31 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
   FILE *fp;
   int ret;
   double *d;
-  
+
   renP->fractalType = 0;
   renP->maxRaySteps = 2000;
   renP->maxDistance = 100;
 
   fp = fopen(filename,"r");
-  
-  if( !fp ) 
+
+  if( !fp )
     {
       printf(" *** File %s does not exist\n", filename);
       exit(1);
     }
-  
+
   int count = 0;
-  
+
   while (1)
     {
       memset(buf, 0, BUF_SIZE);
-      
+
       ret = fscanf(fp, "%1023[^\n]\n", buf);
       if (ret == EOF) break;
-      
+
       if(buf[0] == '#') // comment line
 	continue;
-      
+
       switch(count)
 	{
 	  // CAMERA
@@ -73,7 +73,7 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
 	  d = camP->camTarget;
 	  sscanf(buf, "%lf %lf %lf", d, d+1, d+2);
 	  break;
-	  //camera up 
+	  //camera up
 	case 2:
 	  d = camP->camUp;
 	  sscanf(buf, "%lf %lf %lf", d, d+1, d+2);
@@ -82,7 +82,7 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
 	case 3:
 	  sscanf(buf, "%lf", &camP->fov);
 	  break;
-	  
+
 	  //IMAGE
 	  //width, height
 	case 4:
@@ -92,17 +92,17 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
 	case 5:
 	  sscanf(buf, "%f", &renP->detail);
 	  break;
-	  
+
 	  //FRACTAL
 	case 6:
 	  sscanf(buf, "%f %f %f", &boxP->scale, &boxP->rMin, &boxP->rFixed);
  	  break;
-	  
+
 	case 7:
 	  sscanf(buf, "%d %f ", &boxP->num_iter, &boxP->escape_time);
 	  break;
-	  
-	  //COLORING 
+
+	  //COLORING
 	case 8:
 	  sscanf(buf, "%d", &renP->colourType);
 	  break;
@@ -112,12 +112,39 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
 	case 10:
 	  sscanf(buf, "%d ", &renP->super_sampling);
 	  break;
-	  
+
 	  //FILENAME
 	case 11:
 	  strcpy(renP->file_name, buf);
 	  break;
+	case 12:
+		sscanf(buf, "%d", &renP->enable);
+	case 13:
+		sscanf(buf, "%d %d %d", &renP->camBoundBox,&renP->boundBoxx,&renP->boundBoxy);
+		/*
+		Need to check to make sure we don't check outside of picture
+		Assume radius of holeSize will be less than 20 pixels
+		 */
+		if (renP->boundBoxx%2 != 0) renP->boundBoxx ++;
+		if (renP->boundBoxy%2 != 0) renP->boundBoxy ++;
+		if (renP->boundBoxx > renP->width) renP->boundBoxx = renP->width - 20;
+		if (renP->boundBoxy > renP->height) renP->boundBoxy = renP->height - 20;
+		break;
+	case 14:
+		sscanf(buf, "%d",&renP->distShower);
+		break;
+		case 15:
+		sscanf(buf, "%d", &renP->camTestPoints);
+		break;
+	case 16:
+		sscanf(buf, "%d", &renP->holeSize);
+		/*
+		If holesize is greater than 20 pixels make sure to change the bounding
+		box check (at the time of writing case 13)
+		 */
+		break;
 	}
+
       count++;
     }
   fclose(fp);

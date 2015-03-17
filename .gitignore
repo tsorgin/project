@@ -1,0 +1,13 @@
+*.o
+*.bmp
+*.jpeg
+*.avi
+*.jpg
+*.pdf
+*.tex
+*.aux
+*.dat
+*.txt
+*.py
+*.log
+mandelbox

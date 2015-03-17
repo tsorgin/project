@@ -22,7 +22,7 @@
 #ifndef _RENMandelBoxDERER_H
 #define _RENMandelBoxDERER_H
 
-typedef struct 
+typedef struct
 {
   int fractalType;
   int colourType;
@@ -34,6 +34,22 @@ typedef struct
   int maxRaySteps;
   float maxDistance;
   char file_name[80];
+
+  /*
+  If we get more complicated we will have to start doing checks on which params are on and off
+  based on other param. IE dependencies.
+   */
+
+  /*
+  Params for CAmera pth planning
+   */
+  int enable; //Do we want Camera path planning enabled
+  int distShower; //Shows a circle on the screen of the furthest point (in the viewing sqaure)
+  int holeSize; //How big of a test circle to draw(in pixles)
+  int camBoundBox; //Do we want to see the window where the camera is searching for new max depth
+  int boundBoxx; //Bounding box x size
+  int boundBoxy; //Bounding box y size
+  int camTestPoints; //Should we show were the camera is testing for max depth (circles)
 } RenderParams;
 
 #endif

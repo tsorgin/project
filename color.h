@@ -28,6 +28,7 @@ typedef struct
   bool escaped;
   vec3 hit;
   vec3 normal;
+  double distance;
 } pixelData;
 
 #endif
