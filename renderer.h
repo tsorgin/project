@@ -51,6 +51,12 @@ typedef struct
   int boundBoxy; //Bounding box y size
   int camTestPoints; //Should we show were the camera is testing for max depth (circles)
 
+  /*
+  Parameter to indicate we get data from a file
+   */
+  int renderFromFile;
+  int numFrames;
+  char frame_dat_file[80];
 
   /*
   Params for custom shadding

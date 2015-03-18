@@ -14,7 +14,7 @@
 -3
 # MANDELBOX
 # scale, rMin, rFixed  (2 0.5 1)
-2 1 2
+2 .5 2
 # max number of iterations, escape time
 18 100
 # COLORING
@@ -38,3 +38,8 @@ image.bmp
 0
 # Hole size (radius in pixels) holeSize
 5
+# RENDER FRAMES FROM FILE
+# do it (1 on)
+1
+# File Name
+frames.dat

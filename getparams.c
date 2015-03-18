@@ -143,6 +143,12 @@ void getParameters(char *filename, CameraParams *camP, RenderParams *renP, Mande
 		box check (at the time of writing case 13)
 		 */
 		break;
+	case 17:
+		sscanf(buf, "%d", &renP->renderFromFile);
+		break;
+	case 18:
+		strcpy(renP->frame_dat_file, buf);
+		break;
 	}
 
       count++;
