@@ -1,8 +1,8 @@
 # CAMERA
-# location  x,y,z   (7,7,7)
-5.5 5.5 6.5
+# location  x,y,z   (7,7,7) 5.5 5.5 6.5
+0.0 0.0 6.02
 # look_at (target)  x,y,z
-5 5 5
+0 0 0
 # up vector x,y,z;  (0, 1, 0)
 0 1 0
 # field of view     (1)
@@ -11,7 +11,7 @@
 # width height
 325 325
 # detail level, the smaller the more detailed (-3)
--3
+-2
 # MANDELBOX
 # scale, rMin, rFixed  (2 0.5 1)
 2 .5 2
@@ -40,6 +40,6 @@ image.bmp
 5
 # RENDER FRAMES FROM FILE
 # do it (1 on)
-1
+0
 # File Name
 frames.dat
