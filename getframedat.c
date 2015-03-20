@@ -132,11 +132,13 @@ count ++;
   camera stuff
    */
   renP->enable = 0;
+  renP->width= (*frame_params)[0].width;
+  renP->height= (*frame_params)[0].height;
   return numframes;
 }
 
 void updateCamRenParams(int currFrame , FrameData (**fp),CameraParams *camP, RenderParams *renP, MandelBoxParams *mbP){
-	printf("Updating render and camera params\n");
+	// printf("Updating render and camera params\n");
 
 	camP->camPos[0] = (*fp)[currFrame].camPos[0];
 	camP->camPos[1] = (*fp)[currFrame].camPos[1];

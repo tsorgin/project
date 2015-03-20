@@ -135,6 +135,7 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
 	}
       printProgress((j+1)/(double)height,getTime()-time);
     }
+
     renderer_params.old_max_distance = scalefactor; //We use this inthe next frame as a guess when we do colouring
 
     printf("Max camera distance %f\n", scalefactor);

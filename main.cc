@@ -72,14 +72,13 @@ int main(int argc, char** argv)
   }
 
   printf("Number of frames: %d\n", numframes);
-  // printf("file name 2 %s\n",frame_params[0].file_name);
+   // printf("file name 2 %d\n",frame_params[0].width);
   // printf("file name 2 %s\n",frame_params[1].file_name);
 
 
 
 
   renderer_params.old_max_distance = 0.017113; //Take this out eventually
-
   int image_size = renderer_params.width * renderer_params.height;
   unsigned char *image = (unsigned char*)malloc(3*image_size*sizeof(unsigned char));
   logfile << "Resolution: " << renderer_params.width << "x" << renderer_params.height << "\n";
@@ -204,7 +203,6 @@ int main(int argc, char** argv)
       updateCamRenParams(i ,&frame_params,&camera_params, &renderer_params,&mandelBox_params);
       init3D(&camera_params, &renderer_params);
       renderFractal(camera_params, renderer_params, image, New_dir);
-
       saveBMP(frame_params[i].file_name, image, renderer_params.width, renderer_params.height);
 
     }
