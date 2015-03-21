@@ -59,10 +59,10 @@ int main(int argc, char** argv)
   FrameData    (*frame_params);
   vec3 New_dir;
 
-  int numframes = 200; //Number of frames to render
-  float newPos_resolution = 0.005;  // The influence of the new camera target on the old camera target (jitter)
-  float max_TargetChange = 0.5;  // Max influence of the new camera target on the old camera target
-  float max_FrameStep = 0.0001;  // Max distance travelled down vector between camera and camera target
+  int numframes = 20; //Number of frames to render
+  float newPos_resolution = 0.05;  // The influence of the new camera target on the old camera target (jitter)
+  float max_TargetChange = 2.5;  // Max influence of the new camera target on the old camera target
+  float max_FrameStep = 0.00001;  // Max distance travelled down vector between camera and camera target
   double dist; // How far to move per frame
   logfile << "newPos_resolution: " << newPos_resolution << "\nmax_TargetChange: " << max_TargetChange << "\nmax_FrameStep: " << max_FrameStep << "\n";
 
@@ -134,9 +134,13 @@ int main(int argc, char** argv)
 
 
       // MAP TO 3D AND FIND NEW CAMERA TARGET
-      init3D(&camera_params, &renderer_params);
-      printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
-      printf("**********************************************\n");
+      if (i%5 == 0)
+      {
+        init3D(&camera_params, &renderer_params);
+        printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
+        printf("**********************************************\n");
+      }
+
 
       char buf[10];
       sprintf(buf,"%d.bmp", i);
