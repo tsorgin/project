@@ -147,22 +147,13 @@ int main(int argc, char** argv)
       camera_params.camPos[2] = dist*max_FrameStep +  camera_params.camPos[2];
 
 
-      // MAP TO 3D AND FIND NEW CAMERA TARGET
-<<<<<<< HEAD
-      init3D(&camera_params, &renderer_params);
-      printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
-      printf("**********************************************\n");
-      // FILE NAME FOR IMAGE
-=======
       if (i%5 == 0)
       {
         init3D(&camera_params, &renderer_params);
         printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
         printf("**********************************************\n");
       }
-
-
->>>>>>> 112ae1624c4090c699bfe86919d6e2c77b0207cd
+      
       char buf[10];
       sprintf(buf,"%d.bmp", i);
       saveBMP(buf, image, renderer_params.width, renderer_params.height);
