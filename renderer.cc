@@ -29,7 +29,7 @@
 extern double getTime();
 extern void   printProgress( double perc, double time );
 int holesize (unsigned char * image, double * x, int i , int j,  double max_distance, int width, int height, int radius, int check);
-void convert_to_distancemap (unsigned char *image, double * x, int width, int height, double max_distance, double scalefactor);
+void convert_to_distancemap (unsigned char *image, double * x, int width, int height,  double scalefactor);
 void colour_focus_dir (unsigned char *image, int i, int j, int width, int height,int radius);
 extern void rayMarch (const RenderParams &render_params, const vec3 &from, const vec3  &to, pixelData &pix_data);
 extern vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
@@ -146,15 +146,29 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
 	    int ii=0, jj=0;
 	    double max_distance = 0.0;
 
+	    double min_distance = 0.0000007;
 
+		// TURN CLOSE STUFF YELLOW
+		for(int i = 0; i < height; i++)
+		{
+			for(int j = 0; j < width; j++)
+			{
+				int k = (i *width+ j);
+				if(x[i * width + j] < min_distance)
+				{
+					// Yellow
+					image[k*3+2] = 255;
+					image[k*3+1] = 255;
+					image[k*3]   = 0;
+				}
+			}
+		}
 
 	    //This section checks to see which points are good to zoom the camera into. COntained to
 	    //the centre of the view window. this prevents out of array checking as well as rapid movement
 
 
-	    if (renderer_params.colourType == 2){ //Make picture a distance map
-	    	convert_to_distancemap (image,  x,  width,  height, max_distance,scalefactor);
-		}
+
 
 	    for (int i = bounding_box_y; i < height-bounding_box_y; i++)
 	    {
@@ -179,6 +193,13 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
 	    		}
 	    	}
 	    }
+	    /*
+	    If we colour the distance map based off of the max the camera can see it will help
+	    make the distacne map be more readable.
+	     */
+	    if (renderer_params.colourType == 2){ //Make picture a distance map
+	    	convert_to_distancemap (image,  x,  width,  height, max_distance);
+		}
 	    /*
 	    Need the max distance on each frame. REALLY BADLY
 	    We want to take this on the view window. This will keep it more consistent
@@ -316,7 +337,7 @@ int holesize (unsigned char * image, double * x,  int ii, int jj, double scalefa
 
 	return 1;
 }
-void convert_to_distancemap (unsigned char *image, double *x, int width, int height, double max_distance, double scalefactor){
+void convert_to_distancemap (unsigned char *image, double *x, int width, int height,  double scalefactor){
 
 
 	 for (int i = 0; i < height; i++)
