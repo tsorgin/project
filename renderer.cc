@@ -27,6 +27,9 @@
 #include "3d.h"
 
 extern double getTime();
+void colour_camBoundBox(unsigned char * image, double * x, int bounding_box_x, int bounding_box_y, int width, int height);
+void choose_cam_zoom_point(unsigned char * image, double *x, int bounding_box_x, int bounding_box_y, double scalefactor, const RenderParams &render_params, int * ii, int *jj, double * max_distance);
+void colour_close(unsigned char *image, double * x, int width, int height, double min_distance);
 extern void   printProgress( double perc, double time );
 int holesize (unsigned char * image, double * x, int i , int j,  double max_distance, int width, int height, int radius, int check);
 void convert_to_distancemap (unsigned char *image, double * x, int width, int height,  double scalefactor);
@@ -141,104 +144,46 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
     printf("Max camera distance %f\n", scalefactor);
     if (renderer_params.enable == 1)
     {
-    	/*Does camera path planning*/
+    	/*
+    	This section of code does camera planning
+    	This involves writing a log file (done in main)
+    	*/
 
 	    int ii=0, jj=0;
 	    double max_distance = 0.0;
-
 	    double min_distance = 0.0000007;
 
-		// TURN CLOSE STUFF YELLOW
-		for(int i = 0; i < height; i++)
-		{
-			for(int j = 0; j < width; j++)
-			{
-				int k = (i *width+ j);
-				if(x[i * width + j] < min_distance)
-				{
-					// Yellow
-					image[k*3+2] = 255;
-					image[k*3+1] = 255;
-					image[k*3]   = 0;
-				}
-			}
-		}
-
-	    //This section checks to see which points are good to zoom the camera into. COntained to
-	    //the centre of the view window. this prevents out of array checking as well as rapid movement
+	    colour_close(image, x, width, height,min_distance);
+	    choose_cam_zoom_point(image, x, bounding_box_x, bounding_box_y, scalefactor, renderer_params, &ii, &jj, &max_distance);
 
 
-
-
-	    for (int i = bounding_box_y; i < height-bounding_box_y; i++)
-	    {
-	    	for (int j = bounding_box_x; j < width-bounding_box_x; j++)
-	    	{
-
-	     			int k = (i *width+ j);
-	     			if (renderer_params.camBoundBox == 1)
-	     			{
-	     				// Shadding to see the bounding box (where we search for max distance)
-						image[k*3+2] = 255;
-						image[k*3+1] = 0;
-						image[k*3]   = 0;
-	     			}
-
-
-	    		if ( x[i * width + j] > max_distance && holesize (image, x,i,j,scalefactor, width ,height,renderer_params.holeSize, renderer_params.camTestPoints)){
-
-	    			max_distance = x[i * width + j];
-	    			ii =i;
-	    			jj =j;
-	    		}
-	    	}
-	    }
 	    /*
 	    If we colour the distance map based off of the max the camera can see it will help
 	    make the distacne map be more readable.
 	     */
-	    if (renderer_params.colourType == 2){ //Make picture a distance map
+	    if (renderer_params.colourType == 2){
+	    	/*
+	    	convert the output image to a greyscale image that shows distance of objects
+	    	from the camera. Sometiems this image will look really bad simply because of
+	    	scaling issues (to get within the 255 rgb limit)
+	    	 */
 	    	convert_to_distancemap (image,  x,  width,  height, max_distance);
 		}
-	    /*
-	    Need the max distance on each frame. REALLY BADLY
-	    We want to take this on the view window. This will keep it more consistent
-	     */
 
 
-
-
-		if (renderer_params.camBoundBox == 1)
+		if (renderer_params.camBoundBox == 1){
 			/*
-			Only shows the camera view box if the params file wants to see it
+			Displays all of the points where the camera is searching for a new
+			max distance.
 			 */
-		{
-			for (int i = bounding_box_y; i < height-bounding_box_y; i++)
-			{
-				for (int j = bounding_box_x; j < width-bounding_box_x; j++)
-				{
-					int k = (i *width+ j);
-					if (renderer_params.camBoundBox == 1)
-					{
-						// Shadding to see the bounding box (where we search for max distance)
-						image[k*3+2] = 255;
-						image[k*3+1] = 0;
-						image[k*3]   = 0;
-					}
-				}
-			}
+			colour_camBoundBox(image, x, bounding_box_x, bounding_box_y, height, width);
 		}
 
-    	if ((ii+jj) == 0) {
-    		/*
-    		If algortithm gets confused and can't find a new point.
-    		 */
-    		ii = width/2 + width%2;
-    		jj = height/2 + width%2;
-    	}
-
-	    if (renderer_params.distShower == 1) //Will show were the camera should look.
+	    if (renderer_params.distShower == 1)
 	    {
+	    	/*
+	    	Will show were the camera wants look. makes a little blue dot
+	    	 */
 	    	colour_focus_dir(image, ii, jj, width, height,renderer_params.holeSize);
 	    }
 
@@ -379,6 +324,88 @@ void colour_focus_dir (unsigned char *image, int ii, int jj, int width, int heig
 				image[k*3]   = 255;
 			}
 
+
+		}
+	}
+}
+void colour_close(unsigned char *image, double * x, int width, int height, double min_distance){
+	/*
+	Colours all things in the picture yellow that are closer than min_distance
+	 */
+	// TURN CLOSE STUFF YELLOW
+	for(int i = 0; i < height; i++)
+	{
+		for(int j = 0; j < width; j++)
+		{
+			int k = (i *width+ j);
+			if(x[i * width + j] < min_distance)
+			{
+				// Yellow
+				image[k*3+2] = 255;
+				image[k*3+1] = 255;
+				image[k*3]   = 0;
+			}
+		}
+	}
+}
+
+void choose_cam_zoom_point(unsigned char * image, double *x, int bounding_box_x, int bounding_box_y, double scalefactor, const RenderParams &render_params, int * ii, int * jj, double * max_distance){
+	/*
+	This function looks inside a specified region on the screen named camBoundBox.
+	It searches for a group of points the size of holeSize and then remembers this point
+	so that the camera can move in this direction in the future
+	 */
+	int height = render_params.height;
+	int width = render_params.width;
+
+
+	for (int i = bounding_box_y; i < height-bounding_box_y; i++)
+	{
+    	for (int j = bounding_box_x; j < width-bounding_box_x; j++)
+    	{
+
+     			int k = (i *width+ j);
+     			if (render_params.camBoundBox == 1)
+     			{
+     				// Shadding to see the bounding box (where we search for max distance)
+					image[k*3+2] = 255;
+					image[k*3+1] = 0;
+					image[k*3]   = 0;
+     			}
+
+
+    		if ( x[i * width + j] > *max_distance && holesize (image, x,i,j,scalefactor, width ,height,render_params.holeSize, render_params.camTestPoints)){
+
+    			*max_distance = x[i * width + j];
+    			*ii =i;
+    			*jj =j;
+    		}
+    	}
+	}
+
+	if ((*ii+*jj) == 0) {
+    		/*
+    		If algortithm gets confused and can't find a new point just take
+    		the centre of the screen
+    		 */
+    		*ii = width/2 + width%2;
+    		*jj = height/2 + width%2;
+    	}
+}
+
+void colour_camBoundBox(unsigned char * image, double * x, int bounding_box_x, int bounding_box_y, int height , int width){
+	/*
+	Displays all of the points where the camera is searching for a new
+	max distance.
+	 */
+	for (int i = bounding_box_y; i < height-bounding_box_y; i++)
+	{
+		for (int j = bounding_box_x; j < width-bounding_box_x; j++)
+		{
+			int k = (i *width+ j);
+			image[k*3+2] = 255;
+			image[k*3+1] = 0;
+			image[k*3]   = 0;
 
 		}
 	}
