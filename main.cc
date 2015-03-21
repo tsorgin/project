@@ -44,6 +44,7 @@ void updateCamRenParams(int currFrame,FrameData (**frame_params),CameraParams *c
 void init3D       (CameraParams *camera_params, const RenderParams *renderer_params);
 void renderFractal(const CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
 void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
+void writeFrameData(int frame_num, CameraParams &camera_params, RenderParams &renderer_params, MandelBoxParams &mandelBox_paramsP);
 
 MandelBoxParams mandelBox_params;
 
@@ -51,8 +52,6 @@ int main(int argc, char** argv)
 {
   ofstream logfile;
   logfile.open("log.dat");
-  logfile << "hello";
-
 
   CameraParams    camera_params;
   RenderParams    renderer_params;
@@ -60,9 +59,9 @@ int main(int argc, char** argv)
   vec3 New_dir;
 
   int numframes = 200; //Number of frames to render
-  float newPos_resolution = 0.005;  // The influence of the new camera target on the old camera target (jitter)
-  float max_TargetChange = 0.5;  // Max influence of the new camera target on the old camera target
-  float max_FrameStep = 0.0001;  // Max distance travelled down vector between camera and camera target
+  double newPos_resolution = 0.05;  // The influence of the new camera target on the old camera target (jitter)
+  double max_TargetChange = 2.5;  // Max influence of the new camera target on the old camera target
+  double max_FrameStep = 0.000001;  // Max distance travelled down vector between camera and camera target
   double dist; // How far to move per frame
   logfile << "newPos_resolution: " << newPos_resolution << "\nmax_TargetChange: " << max_TargetChange << "\nmax_FrameStep: " << max_FrameStep << "\n";
 
@@ -85,13 +84,16 @@ int main(int argc, char** argv)
   for (int i = 0; i < numframes; i++)
   {
 
+    // SEND FRAME DATA TO FILE
+    writeFrameData(i, camera_params, renderer_params, mandelBox_params);
+
     printf("Frame %d\n", i);
     // RENDER FRAMES USING PATH PLANNING
     if (renderer_params.enable == 1)
     {
       // CAMERA LOCATION
       // CAMERA FRAME X Y Z
-      printf("CAMERA TARGET: %f, %f, %f\n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2]);
+      printf("CAMERA LOCATION: %f, %f, %f\n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2]);
       logfile << "C" << " " << i << " " << camera_params.camPos[0] << " " << camera_params.camPos[1] << " " << camera_params.camPos[2] << "\n";
 
       // TARGET LOCATION
@@ -101,8 +103,20 @@ int main(int argc, char** argv)
 
       // RENDER THE FRAME
       renderFractal(camera_params, renderer_params, image, New_dir);
-
       printf("NEW CAMERA DIRECTION: %f, %f, %f\n", New_dir.x,New_dir.y,New_dir.z);
+
+
+      //         x -= 1
+      // lookat[1] -= .5
+      // pos = np.array([9.5 ,7.5 ,6.5])
+      // up = np.array([0,1,0])
+      // at = lookat - pos
+      // at/= np.linalg.norm(at)
+      // right = np.cross(at, up)
+      // right/= np.linalg.norm(right)
+      // up = np.cross(at,right)
+      
+      
       // CALCULATE THE NEW CAMERA TARGET (with LOW-PASS FILTER)
       // if the target is within some range of the last target, change the target.
       // Else target is unchanged.
@@ -137,7 +151,7 @@ int main(int argc, char** argv)
       init3D(&camera_params, &renderer_params);
       printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
       printf("**********************************************\n");
-
+      // FILE NAME FOR IMAGE
       char buf[10];
       sprintf(buf,"%d.bmp", i);
       saveBMP(buf, image, renderer_params.width, renderer_params.height);
@@ -157,7 +171,6 @@ int main(int argc, char** argv)
     }
 
   }
-
 
   logfile.close();
   free(image);
