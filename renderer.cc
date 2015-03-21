@@ -38,7 +38,7 @@ extern void rayMarch (const RenderParams &render_params, const vec3 &from, const
 extern vec3 getColour(const pixelData &pixData, const RenderParams &render_params,
 		      const vec3 &from, const vec3  &direction, double max_distance);
 
-void renderFractal(const CameraParams &camera_params,  RenderParams &renderer_params,
+void renderFractal(CameraParams &camera_params,  RenderParams &renderer_params,
 		   unsigned char* image, vec3 &max_dist)
 {
   double farPoint[3];
@@ -151,7 +151,7 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
 
 	    int ii=0, jj=0;
 	    double max_distance = 0.0;
-	    double min_distance = 0.0000007;
+	    double min_distance = 0.000011;
 
 	    colour_close(image, x, width, height,min_distance);
 	    choose_cam_zoom_point(image, x, bounding_box_x, bounding_box_y, scalefactor, renderer_params, &ii, &jj, &max_distance);
@@ -187,6 +187,67 @@ double prev_max_distance = renderer_params.old_max_distance; //Currently just ma
 	    	colour_focus_dir(image, ii, jj, width, height,renderer_params.holeSize);
 	    }
 
+	    ////////////////////////////////////////////////////////////////////////////
+	    ///Testing area
+	 //    int move = 0;
+	 //    printf("Point x:%d y: %d\n", ii, jj);
+	 //    int k = (ii *width+ jj);
+		// 		image[k*3+2] = 255;
+		// 		image[k*3+1] = 255;
+		// 		image[k*3]   = 0;
+	 //    for (int i = height/2 -20; i < height/2+20; i++)
+		// {
+		// 	for (int j = width/2-20; j < width/2+20; j++)
+		// 	{
+		// 		int k = (i *width+ j);
+		// 		image[k*3+2] = i;
+		// 		image[k*3+1] = j;
+		// 		image[k*3]   = 0;
+		// 		if (x[k] < min_distance){
+		// 			move ++;
+		// 		}
+		// 	}
+		// }
+		// int locationx = width/2;
+		// if ( move > 0)
+		// {
+
+		// 	/* Try to find a block containg less close stuff */
+		// 	for (int offset = 0; offset < 50; offset++)
+		// 	{
+		// 		int temp = 0;
+		// 		for (int i = height/2 -20; i < height/2+20; i++)
+		// 		{
+		// 			for (int j = width/2-20 - offset; j < width/2+20 - offset; j++)
+		// 			{
+		// 				int k = (i *width+ j-offset);
+		// 				image[k*3+2] = 255;
+		// 				image[k*3+1] = 255;
+		// 				image[k*3]   = 0;
+		// 				if (x[k] < min_distance){
+		// 					temp ++;
+		// 				}
+		// 			}
+		// 		}
+		// 		if (temp < move){
+		// 			//We found a box that was better.
+		// 			// printf("temp: %d\n", temp);
+		// 			locationx = offset;
+		// 		}
+		// 		if (temp ==0 ) //Ed look here plese
+		// 		{
+		// 			//Found a clear path, it may not be the best one though
+		// 			double xx [3];
+		// 			int fun = width/2 - locationx;
+		// 		    UnProject(fun , (int)(height/2), camera_params, xx);
+		// 		    printf("%d Point is: %f %f %f\n",fun, xx[0], xx[1], xx[2]);
+		// 			camera_params.camPos[0] = camera_params.camPos[0] - locationx;
+		// 			printf("Move camera location\n");
+		// 			break;
+		// 		}
+		// 	}
+		// }
+		////////////////////////////////////////////////////////////////////////////
 	    double xx [3];
 	    UnProject(ii, jj, camera_params, xx);
 	    max_dist.x = xx[0];
