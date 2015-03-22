@@ -42,7 +42,7 @@ int getFrameData(char *filename, FrameData (**frame_params),CameraParams *camera
 void updateCamRenParams(int currFrame,FrameData (**frame_params),CameraParams *camera_params,
  RenderParams *renderer_params ,MandelBoxParams *mandelBox_paramsP);
 void init3D       (CameraParams *camera_params, const RenderParams *renderer_params);
-void renderFractal(const CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
+void renderFractal(CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
 void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
 void writeFrameData(int frame_num, CameraParams &camera_params, RenderParams &renderer_params, MandelBoxParams &mandelBox_paramsP);
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
   FrameData    (*frame_params);
   vec3 New_dir;
 
-  int numframes = 200; //Number of frames to render
+  int numframes = 6; //Number of frames to render
   double newPos_resolution = 0.05;  // The influence of the new camera target on the old camera target (jitter)
   double max_TargetChange = 2.5;  // Max influence of the new camera target on the old camera target
   double max_FrameStep = 0.000001;  // Max distance travelled down vector between camera and camera target
@@ -115,8 +115,8 @@ int main(int argc, char** argv)
       // right = np.cross(at, up)
       // right/= np.linalg.norm(right)
       // up = np.cross(at,right)
-      
-      
+
+
       // CALCULATE THE NEW CAMERA TARGET (with LOW-PASS FILTER)
       // if the target is within some range of the last target, change the target.
       // Else target is unchanged.
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
         printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
         printf("**********************************************\n");
       }
-      
+
       char buf[10];
       sprintf(buf,"%d.bmp", i);
       saveBMP(buf, image, renderer_params.width, renderer_params.height);
