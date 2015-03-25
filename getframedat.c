@@ -81,7 +81,8 @@ int getFrameData(char *filename, FrameData (**frame_params),CameraParams *camP, 
 		/*
 		Read in an insane number of paramters.
 		 */
-		sscanf(buf, "%lf %lf %lf \
+		sscanf(buf, "%d \
+					%lf %lf %lf \
 					 %lf %lf %lf \
 					 %lf %lf %lf \
 					 %lf\
@@ -97,6 +98,7 @@ int getFrameData(char *filename, FrameData (**frame_params),CameraParams *camP, 
 					 %f\
 					 %d\
 					 %s", \
+					 &(*frame_params)[index].super_sampling,\
 			&(*frame_params)[index].camPos[0],\
 			&(*frame_params)[index].camPos[1],\
 		 &(*frame_params)[index].camPos[2],\

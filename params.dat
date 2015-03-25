@@ -40,6 +40,6 @@ image.bmp
 5
 # RENDER FRAMES FROM FILE
 # do it (1 on)
-0
+1
 # File Name
 frames.dat

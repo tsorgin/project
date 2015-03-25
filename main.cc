@@ -33,8 +33,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Quaternion.h"
 using namespace std;
 
+void camUP_Calc (CameraParams &camera_params, Quaternion &Orient);
 void getParameters(char *filename, CameraParams *camera_params, RenderParams *renderer_params,
        MandelBoxParams *mandelBox_paramsP);
 int getFrameData(char *filename, FrameData (**frame_params),CameraParams *camera_params,
@@ -45,6 +47,7 @@ void init3D       (CameraParams *camera_params, const RenderParams *renderer_par
 void renderFractal(CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
 void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
 void writeFrameData(int frame_num, CameraParams &camera_params, RenderParams &renderer_params, MandelBoxParams &mandelBox_paramsP);
+vec3 Cross(vec3 V1, vec3 V2);
 
 MandelBoxParams mandelBox_params;
 
@@ -56,14 +59,20 @@ int main(int argc, char** argv)
   CameraParams    camera_params;
   RenderParams    renderer_params;
   FrameData    (*frame_params);
-  vec3 New_dir;
 
-  int numframes = 6; //Number of frames to render
-  double newPos_resolution = 0.05;  // The influence of the new camera target on the old camera target (jitter)
+  vec3 New_dir;
+  // vec3 New_dir, VectorTo, LocalVector, Axis, ThirdVect;
+  // Quaternion AxisAngle;
+  Quaternion Orient;
+
+  // double Angle;
+
+  int numframes = 1000; //Number of frames to render
+  double newPos_resolution = 0.05;  // The influence of the new camera target on the old camera target (jitter) 0.05
   double max_TargetChange = 2.5;  // Max influence of the new camera target on the old camera target
-  double max_FrameStep = 0.000001;  // Max distance travelled down vector between camera and camera target
+  double max_FrameStep = 0.0001;  // Max distance travelled down vector between camera and camera target 0.00001
   double dist; // How far to move per frame
-  logfile << "newPos_resolution: " << newPos_resolution << "\nmax_TargetChange: " << max_TargetChange << "\nmax_FrameStep: " << max_FrameStep << "\n";
+  logfile << "newPos_resolution: " << newPos_resolution << "\n max_TargetChange: " << max_TargetChange << "\n max_FrameStep: " << max_FrameStep << "\n";
 
 
   getParameters(argv[1], &camera_params, &renderer_params, &mandelBox_params);
@@ -73,6 +82,16 @@ int main(int argc, char** argv)
   }
 
   printf("Number of frames: %d\n", numframes);
+
+
+  //Init orientation quaternion
+  Orient.x = camera_params.camUp[0];
+  Orient.y = camera_params.camUp[1];
+  Orient.z = camera_params.camUp[2];
+  Orient.w = 0.0f;
+
+  //CALCULATE NEW UP VECTOR
+  camUP_Calc(camera_params, Orient);
 
   renderer_params.old_max_distance = 0.017113; //Take this out eventually
   int image_size = renderer_params.width * renderer_params.height;
@@ -96,6 +115,11 @@ int main(int argc, char** argv)
       printf("CAMERA LOCATION: %f, %f, %f\n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2]);
       logfile << "C" << " " << i << " " << camera_params.camPos[0] << " " << camera_params.camPos[1] << " " << camera_params.camPos[2] << "\n";
 
+      // CAMERA UP VECTOR
+      // CAMERA UP VECTOR X Y Z
+      printf("CAMERA UP VECTOR: %f, %f, %f\n",camera_params.camUp[0],camera_params.camUp[1],camera_params.camUp[2]);
+      logfile << "U" << " " << i << " " << camera_params.camUp[0] << " " << camera_params.camUp[1] << " " << camera_params.camUp[2] << "\n";
+
       // TARGET LOCATION
       // TARGET FRAME X Y Z
       printf("CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
@@ -104,18 +128,6 @@ int main(int argc, char** argv)
       // RENDER THE FRAME
       renderFractal(camera_params, renderer_params, image, New_dir);
       printf("NEW CAMERA DIRECTION: %f, %f, %f\n", New_dir.x,New_dir.y,New_dir.z);
-
-
-      //         x -= 1
-      // lookat[1] -= .5
-      // pos = np.array([9.5 ,7.5 ,6.5])
-      // up = np.array([0,1,0])
-      // at = lookat - pos
-      // at/= np.linalg.norm(at)
-      // right = np.cross(at, up)
-      // right/= np.linalg.norm(right)
-      // up = np.cross(at,right)
-
 
       // CALCULATE THE NEW CAMERA TARGET (with LOW-PASS FILTER)
       // if the target is within some range of the last target, change the target.
@@ -147,12 +159,20 @@ int main(int argc, char** argv)
       camera_params.camPos[2] = dist*max_FrameStep +  camera_params.camPos[2];
 
 
-      if (i%5 == 0)
-      {
-        init3D(&camera_params, &renderer_params);
-        printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
-        printf("**********************************************\n");
-      }
+      printf("**********************************************\n");
+      printf("CAMERA LOCATION: %f, %f, %f\n",camera_params.camPos[0],camera_params.camPos[1],camera_params.camPos[2]);
+      printf("CAMERA UP VECTOR: %f, %f, %f\n",camera_params.camUp[0],camera_params.camUp[1],camera_params.camUp[2]);
+      printf("CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
+
+      //CALCULATE NEW UP VECTOR
+      camUP_Calc(camera_params, Orient);
+
+      printf("New Up == %lf, %lf, %lf\n", camera_params.camUp[0], camera_params.camUp[1], camera_params.camUp[2]);
+
+      printf("**********************************************\n");
+      init3D(&camera_params, &renderer_params);
+      printf("NEW CAMERA TARGET: %f, %f, %f\n",camera_params.camTarget[0],camera_params.camTarget[1],camera_params.camTarget[2]);
+      printf("**********************************************\n");
 
       char buf[10];
       sprintf(buf,"%d.bmp", i);
@@ -184,4 +204,62 @@ int main(int argc, char** argv)
 
 
   return 0;
+}
+
+vec3 Cross(vec3 V1, vec3 V2){
+  return vec3(V1.y*V2.z-V2.y*V1.z,V1.z*V2.x-V2.z*V1.x,V1.x*V2.y-V2.x*V1.y);
+}
+
+
+void camUP_Calc (CameraParams &camera_params, Quaternion &Orient){
+  Quaternion AxisAngle;
+  vec3 New_dir, VectorTo, LocalVector, Axis, ThirdVect, direction;
+  double Angle;
+
+  // CALCULATE THE NEW UP VECTOR
+  printf("Orientation == %lf, %lf, %lf, %lf\n", Orient.x, Orient.y, Orient.z, Orient.w);
+
+  // VectorTo = cameraTarget - cameraPosition -- then normalize
+  VectorTo = SubtractDoubleDouble(camera_params.camTarget,camera_params.camPos);
+  VectorTo.Normalize();
+  printf("VectorTo == %lf, %lf, %lf\n", VectorTo.x, VectorTo.y, VectorTo.z);
+
+  // Straight-ahead vector
+  direction = vec3(0,0,-1);
+  LocalVector = Quaternion_multiplyVector(Orient, direction);
+  LocalVector.Normalize();
+  printf("LocalVector == %lf, %lf, %lf\n", LocalVector.x, LocalVector.y, LocalVector.z);
+
+  //Get the cross product as the axis of rotation
+  Axis = Cross(VectorTo,LocalVector);
+  Axis.Normalize();
+  printf("Axis == %lf, %lf, %lf\n", Axis.x, Axis.y, Axis.z);
+
+  //Get the dot product to find the angle
+  Angle = acos(VectorTo.x*LocalVector.x + VectorTo.y*LocalVector.y + VectorTo.z*LocalVector.z);
+  printf("Angle == %lf \n",Angle);
+
+  //Determine whether or not the angle is positive
+  //Get the cross product of the axis and the local vector
+  ThirdVect = Cross(Axis,LocalVector);
+  ThirdVect.Normalize();
+  printf("ThirdVect == %lf, %lf, %lf\n", ThirdVect.x, ThirdVect.y, ThirdVect.z);
+
+  //If the dot product of that and the local vector is negative, so is the angle
+  if (ThirdVect.x*VectorTo.x + ThirdVect.y*VectorTo.y + ThirdVect.z*VectorTo.z < 0)
+  {
+      Angle = -Angle;
+  }
+
+  //Finally, create a quaternion
+  AxisAngle = Quaternion_fromAxisAngle(Angle, Axis);
+
+  //And multiply it into the current orientation
+  Orient = Quaternion_Mul_OrientationAxis(AxisAngle, Orient);
+  printf("New Orientation == %lf, %lf, %lf, %lf \n", Orient.x, Orient.y, Orient.z, Orient.w);
+
+  // Grab the new up vector from quaternion
+  camera_params.camUp[0] = 2 * (Orient.x * Orient.y - Orient.w * Orient.z);
+  camera_params.camUp[1] = 1 - 2 * (Orient.x * Orient.x + Orient.z * Orient.z);
+  camera_params.camUp[2] = 2 * (Orient.y * Orient.z + Orient.w * Orient.x);
 }
