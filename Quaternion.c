@@ -20,9 +20,9 @@
   Alex Diener adiener@sacredsoftware.net
 */
 
+#include "vector3d.h"
 #include "Quaternion.h"
 
-#include "vector3d.h"
 
 #include <math.h>
 #include <stdlib.h>

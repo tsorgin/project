@@ -34,22 +34,65 @@
 #include <fstream>
 #include <string>
 #include "Quaternion.h"
+#include "mpi.h"
 using namespace std;
 
-void camUP_Calc (CameraParams &camera_params, Quaternion &Orient);
+extern "C"{
 void getParameters(char *filename, CameraParams *camera_params, RenderParams *renderer_params,
        MandelBoxParams *mandelBox_paramsP);
+void init3D       (CameraParams *camera_params, const RenderParams *renderer_params);
+void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
 int getFrameData(char *filename, FrameData (**frame_params),CameraParams *camera_params,
  RenderParams *renderer_params);
 void updateCamRenParams(int currFrame,FrameData (**frame_params),CameraParams *camera_params,
  RenderParams *renderer_params ,MandelBoxParams *mandelBox_paramsP);
-void init3D       (CameraParams *camera_params, const RenderParams *renderer_params);
-void renderFractal(CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
-void saveBMP      (const char* filename, const unsigned char* image, int width, int height);
+}
+
+void camUP_Calc (CameraParams &camera_params, Quaternion &Orient);
 void writeFrameData(int frame_num, CameraParams &camera_params, RenderParams &renderer_params, MandelBoxParams &mandelBox_paramsP);
 vec3 Cross(vec3 V1, vec3 V2);
 
+void renderFractal(CameraParams &camera_params,  RenderParams &renderer_params, unsigned char* image, vec3 &New_dir);
+
 MandelBoxParams mandelBox_params;
+
+void parallelRender(CameraParams &camera_params, RenderParams &renderer_params, unsigned char* image, vec3 &New_dir, MPI_Status status) {
+  // MPI parallizing the renderFractal
+  int my_rank;            // rank of process
+  int numP;               // number of processes
+  int tag = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &numP);
+  int processChunk = renderer_params.height/numP; //decide on how much pixels each process is responsible
+  unsigned char *processImage = (unsigned char*)malloc(3 * processChunk * renderer_params.width * sizeof(unsigned char)); 
+
+	if (my_rank != numP-1)
+  {
+      renderer_params.height = processChunk; // the height relating to each P has changed
+      renderFractal(camera_params, renderer_params, processImage, New_dir);
+      // sending the image to last process
+      printf("am I alive %d \n", my_rank);
+      int numofSend = processChunk * renderer_params.width * 3;
+      MPI_Send( processImage, numofSend, MPI_CHAR, numP-1, tag, MPI_COMM_WORLD);
+    
+  }
+	else // this is the last process
+  {
+      int oriHeight = renderer_params.height;
+      //Note: my_rank = numP - 1
+      renderer_params.height = oriHeight - my_rank*processChunk;
+      renderFractal(camera_params, renderer_params, &image[ my_rank * processChunk * renderer_params.width*3], New_dir);
+      printf("am I alive %d \n", my_rank);
+      //receiving image
+      int numofRev = processChunk * renderer_params.width * 3;
+      for (int revCount=0; revCount < numP-1; revCount++)
+      {
+          MPI_Recv(&image[revCount*numofRev], numofRev, MPI_CHAR, revCount, tag,MPI_COMM_WORLD, &status);
+      }
+        //saveBMP(renderer_params.file_name, image, renderer_params.width, oriHeight);
+  }
+	free(processImage);
+}
 
 int main(int argc, char** argv)
 {
@@ -100,11 +143,16 @@ int main(int argc, char** argv)
 
   init3D(&camera_params, &renderer_params);
 
+	// MPI_init
+  MPI_Status  status;
+  MPI_Init(&argc, &argv);
+
+
   for (int i = 0; i < numframes; i++)
   {
 
     // SEND FRAME DATA TO FILE
-    writeFrameData(i, camera_params, renderer_params, mandelBox_params);
+    //writeFrameData(i, camera_params, renderer_params, mandelBox_params);
 
     printf("Frame %d\n", i);
     // RENDER FRAMES USING PATH PLANNING
@@ -126,7 +174,8 @@ int main(int argc, char** argv)
       logfile << "T" << " " << i << " " << camera_params.camTarget[0] << " " << camera_params.camTarget[1] << " " << camera_params.camTarget[2] << "\n";
 
       // RENDER THE FRAME
-      renderFractal(camera_params, renderer_params, image, New_dir);
+      //renderFractal(camera_params, renderer_params, image, New_dir);
+			parallelRender(camera_params, renderer_params, image, New_dir, status);
       printf("NEW CAMERA DIRECTION: %f, %f, %f\n", New_dir.x,New_dir.y,New_dir.z);
 
       // CALCULATE THE NEW CAMERA TARGET (with LOW-PASS FILTER)
@@ -187,7 +236,9 @@ int main(int argc, char** argv)
        */
       updateCamRenParams(i ,&frame_params,&camera_params, &renderer_params,&mandelBox_params);
       init3D(&camera_params, &renderer_params);
-      renderFractal(camera_params, renderer_params, image, New_dir);
+      
+			//renderFractal(camera_params, renderer_params, image, New_dir);
+			parallelRender(camera_params, renderer_params, image, New_dir, status);
       saveBMP(frame_params[i].file_name, image, renderer_params.width, renderer_params.height);
 
     }
@@ -196,13 +247,14 @@ int main(int argc, char** argv)
 
   logfile.close();
   free(image);
-
-  if (renderer_params.renderFromFile == 1)
+  
+	if (renderer_params.renderFromFile == 1)
   {
     free(frame_params);
   }
+	
 
-
+	MPI_Finalize();
   return 0;
 }
 

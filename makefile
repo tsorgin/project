@@ -1,29 +1,27 @@
-LDFLAGS = -lm
-CFLAGS= -O3 -Wall
-CXXFLAGS= -O3 -Wall
-CC=g++
-RM=rm
+# to compile with pgcc 
+# CXX=pgCC
+# CC=pgcc
+# to compile with gcc
+#CXX=g++
+#CC =gcc
+CXX=mpic++
+CC=mpicc
+CFLAGS= -std=c99 -O2
+CXXFLAGS= -O2
 
 PROGRAM_NAME= mandelbox
 
 $(PROGRAM_NAME): main.o print.o timing.o savebmp.o getparams.o 3d.o getcolor.o distance_est.o mandelboxde.o raymarching.o renderer.o init3D.o getframedat.o writeFrameData.o Quaternion.o
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-test-run: $(PROGRAM_NAME)
+run-serial: $(PROGRAM_NAME)
 	./$(PROGRAM_NAME)$(EXEXT) params.dat
 
-run: $(PROGRAM_NAME)
-	clear
-	./$(PROGRAM_NAME)$(EXEXT) params.dat
-	mv *.bmp frames/
-	mv frames.dat frames/
+run-16: $(PROGRAM_NAME)
+	mpirun -np 16 ./$(PROGRAM_NAME)$(EXEXT) params.dat
+
+run-32: $(PROGRAM_NAME)
+	mpirun -np 32 ./$(PROGRAM_NAME)$(EXEXT) params.dat
 
 clean:
-	$(RM) -rf *.o $(PROGRAM_NAME)$(EXEEXT) *~
-
-all-clean:
-	$(RM) -rf *.o $(PROGRAM_NAME)$(EXEEXT) *~
-	rm -rf *.bmp log.dat
-	cd frames/ && rm -rf *.bmp
-	cd frames/ && rm -rf frames.dat
-	clear
+	rm *.o $(PROGRAM_NAME)$(EXEEXT) *~

@@ -1,6 +1,7 @@
 #ifndef vec3_h
 #define vec3_h
 
+//#include <math.h>
 #include <cmath>
 #include <stdio.h>
 class vec3

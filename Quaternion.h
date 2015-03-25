@@ -23,6 +23,8 @@
 #ifndef __QUATERNION_H__
 #define __QUATERNION_H__
 
+//#include "vector3d.h"
+
 typedef struct Quaternion Quaternion;
 
 // struct Vector;
