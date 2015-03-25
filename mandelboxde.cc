@@ -34,7 +34,21 @@ inline double component_fold(double x)
   if (x>1.0) x = 2.0-x;
   else
     if (x<-1.0) x = -2.0-x;
+ return x;
+
+//2 alternatives to stock component_fold: (both work, but are slower)
+/* //alt 1
+  double sign_of_x = copysign(1.0, x); 
+  if ( sign_of_x * x > 1.0)
+    x = 2.0 * sign_of_x - x;  
   return x;
+*/
+/*	//alt 2
+  double sign_of_x = (x > 0); 
+  if ( x*x > 1.0)
+    x = 4*sign_of_x - 2 - x;
+  return x;
+*/
 }
 
 static void boxFold(vec3 &v)
